@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Calculator</title>
+    <style>
+        /* Base Styling Rest & Body Variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Glassmorphism Calculator UI Container */
+        .calculator {
+            background-color: #1e222b;
+            width: 100%;
+            max-width: 360px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Real-Time Dual Action Display Screen */
+        .display {
+            background-color: #11141a;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: right;
+            margin-bottom: 24px;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .display .history {
+            color: #7f8c8d;
+            font-size: 16px;
+            min-height: 24px;
+        }
+
+        .display .current {
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: 600;
+        }
+
+        /* Layout Grid System for Buttons */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        /* Styling Enhancements for Interactive Buttons */
+        button {
+            border: none;
+            outline: none;
+            border-radius: 16px;
+            padding: 18px 0;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #2d323f;
+            color: #f5f6fa;
+        }
+
+        button:hover {
+            background-color: #3d4456;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* Specific Operator & Functional Coloring Classes */
+        button.operator {
+            background-color: #ff9f0a;
+            color: #ffffff;
+        }
+
+        button.operator:hover {
+            background-color: #ffb03a;
+        }
+
+        button.action {
+            background-color: #4b5366;
+            color: #a5b1c2;
+        }
+
+        button.action:hover {
+            background-color: #576077;
+        }
+
+        button.equals {
+            grid-column: span 2;
+            background-color: #2ed573;
+            color: #ffffff;
+        }
+
+        button.equals:hover {
+            background-color: #26af5f;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <!-- Input and Output Display Screens -->
+        <div class="display">
+            <div class="history" id="historyView"></div>
+            <div class="current" id="currentView">0</div>
+        </div>
+
+        <!-- Layout Controls -->
+        <div class="buttons-grid">
+            <!-- Row 1 -->
+            <button class="action" onclick="clearAll()">C</button>
+            <button class="action" onclick="deleteDigit()">⌫</button>
+            <button class="operator" onclick="appendOperator('/')">÷</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
+            
+            <!-- Row 2 -->
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+            
+            <!-- Row 3 -->
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <!-- Row 4 -->
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="equals" onclick="computeResult()">=</button>
+            
+            <!-- Row 5 -->
+            <button style="grid-column: span 2;" onclick="appendNumber('0')">0</button>
+            <button onclick="appendNumber('.')">.</button>
+        </div>
+    </div>
+
+    <script>
+        const currentView = document.getElementById('currentView');
+        const historyView = document.getElementById('historyView');
+
+        let currentInput = '0';
+        let previousInput = '';
+        let activeOperator = null;
+        let requiresReset = false;
+
+        // UI View Updater Engine
+        function updateDisplay() {
+            currentView.innerText = currentInput;
+            if (activeOperator != null) {
+                let displayOp = activeOperator === '*' ? '×' : activeOperator === '/' ? '÷' : activeOperator;
+                historyView.innerText = `${previousInput} ${displayOp}`;
+            } else {
+                historyView.innerText = '';
+            }
+        }
+
+        // Add numerical values/decimals
+        function appendNumber(num) {
+            if (requiresReset) {
+                currentInput = '';
+                requiresReset = false;
+            }
+            if (num === '.' && currentInput.includes('.')) return;
+            if (currentInput === '0' && num !== '.') {
+                currentInput = num;
+            } else {
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+
+        // Append operator selection safely
+        function appendOperator(op) {
+            if (activeOperator !== null && !requiresReset) {
+                computeResult();
+            }
+            activeOperator = op;
+            previousInput = currentInput;
+            requiresReset = true;
+            updateDisplay();
+        }
+
+        // Clear display handler
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            activeOperator = null;
+            requiresReset = false;
+            updateDisplay();
+        }
+
+        // Backspace action utility 
+        function deleteDigit() {
+            if (requiresReset) return;
+            if (currentInput.length <= 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        // Real-time calculation logic computation execution
+        function computeResult() {
+            if (activeOperator == null || requiresReset) return;
+            
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (activeOperator) {
+                case '+': result = prev + current; break;
+                case '-': result = prev - current; break;
+                case '*': result = prev * current; break;
+                case '/': 
+                    if (current === 0) {
+                        alert("Cannot divide by zero");
+                        clearAll();
+                        return;
+                    }
+                    result = prev / current; 
+                    break;
+                default: return;
+            }
+
+            // Handle decimal precision floating points elegantly
+            currentInput = parseFloat(result.toFixed(8)).toString();
+            activeOperator = null;
+            previousInput = '';
+            requiresReset = true;
+            updateDisplay();
+        }
+
+        // --- Bonus Support: Physical Keyboard Engine Event Binding ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+                appendNumber(e.key);
+            } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                appendOperator(e.key);
+            } else if (e.key === 'Enter' || e.key === '=') {
+                e.preventDefault();
+                computeResult();
+            } else if (e.key === 'Backspace') {
+                deleteDigit();
+            } else if (e.key === 'Escape') {
+                clearAll();
+            }
+        });
+    </script>
+</body>
+</html>
